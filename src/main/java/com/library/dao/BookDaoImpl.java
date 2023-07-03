@@ -2,6 +2,9 @@ package com.library.dao;
 
 import com.library.entity.Book;
 import com.library.entity.Person;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -9,72 +12,74 @@ import java.util.*;
 @Component
 public class BookDaoImpl implements BookDao {
 
-    private final List<Book> books;
+    private final JdbcTemplate jdbcTemplate;
 
-    private final Map<Integer, Person> personsWithBook;
-
-    public BookDaoImpl() {
-        books = new LinkedList<>();
-        personsWithBook = new HashMap<>();
-        books.add(new Book(1,"My book 1","My author 1", 1817));
-        books.add(new Book(2,"My book 2","My author 2", 1925));
+    @Autowired
+    public BookDaoImpl(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
     public void add(Book book) {
-        book.setId(books.size() + 1);
-        books.add(book);
+        jdbcTemplate.update(
+                "INSERT INTO book(title, author, year) VALUES(?, ?, ?)",
+                book.getTitle(),
+                book.getAuthor(),
+                book.getYear()
+        );
     }
 
     @Override
     public void delete(int id) {
-        books.stream()
-                .filter(book -> book.getId() == id)
-                .findFirst()
-                .ifPresent(books::remove);
+        jdbcTemplate.update("DELETE FROM book WHERE id=?", id);
     }
 
     @Override
     public List<Book> findAll() {
-        return books;
+        return jdbcTemplate.query("SELECT * FROM book", new BeanPropertyRowMapper<>(Book.class));
     }
 
     @Override
     public Book find(int id) {
-        return books.stream()
-                .filter(book -> book.getId() == id)
-                .findFirst().get();
+        return jdbcTemplate.query(
+                "SELECT * FROM book WHERE id=?",
+                new BeanPropertyRowMapper<>(Book.class),
+                id)
+                .stream()
+                .findFirst()
+                .orElse(null);
     }
 
     @Override
     public void update(int id, Book updatedBook) {
-        books.stream()
-                .filter(book -> book.getId() == id)
-                .findFirst().ifPresent(
-                        book -> {
-                           book.setTitle(updatedBook.getTitle());
-                           book.setAuthor(updatedBook.getAuthor());
-                           book.setYear(updatedBook.getYear());
-                        }
-                );
+        jdbcTemplate.update(
+                "UPDATE book SET title=?, author=?, year=? WHERE id=?",
+                updatedBook.getTitle(),
+                updatedBook.getAuthor(),
+                updatedBook.getYear(),
+                id);
     }
 
     @Override
     public void assign(int id, Person selectedPerson) {
-        personsWithBook.put(id, selectedPerson);
-
+        jdbcTemplate.update(
+                "UPDATE book SET personId=? WHERE id=?",
+                selectedPerson.getId(),
+                id);
     }
 
     @Override
     public void unassign(int id) {
-        personsWithBook.remove(id);
+        jdbcTemplate.update("UPDATE book SET personId=NULL WHERE id=?", id);
     }
 
     @Override
-    public Optional<Person> getBookOwner(int id) {
-        if (personsWithBook.containsKey(id)) {
-            return Optional.of(personsWithBook.get(id));
-        }
-        return Optional.empty();
+    public Optional<Person> getBookOwner(int bookId) {
+        return jdbcTemplate.query(
+                "SELECT * FROM person WHERE id IN (SELECT personId FROM book WHERE id=?)",
+                new BeanPropertyRowMapper<>(Person.class),
+                        bookId)
+                .stream()
+                .findFirst();
     }
 }

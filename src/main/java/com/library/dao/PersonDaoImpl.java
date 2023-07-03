@@ -2,63 +2,66 @@ package com.library.dao;
 
 import com.library.entity.Book;
 import com.library.entity.Person;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
-import java.util.LinkedList;
 import java.util.List;
 
 @Component
 public class PersonDaoImpl implements PersonDao {
 
-    private final List<Person> persons;
+    private final JdbcTemplate jdbcTemplate;
 
-    public PersonDaoImpl() {
-        persons = new LinkedList<>();
-        persons.add(new Person(1, "Ivan Ivanov Ivanovich", 23));
-        persons.add(new Person(2, "Petr Petrov Petrovich", 25));
+    public PersonDaoImpl(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
     public void add(Person person) {
-        person.setId(persons.size() + 1);
-        persons.add(person);
+        jdbcTemplate.update(
+                "INSERT INTO person(name, age) VALUES(?, ?)",
+                person.getName(),
+                person.getAge()
+        );
     }
 
     @Override
     public void delete(int id) {
-        persons.stream()
-                .filter(person -> person.getId() == id)
-                .findFirst()
-                .ifPresent(persons::remove);
+        jdbcTemplate.update("DELETE FROM person WHERE id=?", id);
     }
 
     @Override
     public List<Person> findAll() {
-        return persons;
+        return jdbcTemplate.query("SELECT * FROM person", new BeanPropertyRowMapper<>(Person.class));
     }
 
     @Override
     public Person find(int id) {
-        return persons.stream()
-                .filter(person -> person.getId() == id)
-                .findFirst().get();
+        return jdbcTemplate.query(
+                        "SELECT * FROM person WHERE id=?",
+                        new BeanPropertyRowMapper<>(Person.class),
+                        id)
+                .stream()
+                .findFirst()
+                .orElse(null);
     }
 
     @Override
     public void update(int id, Person updatedPerson) {
-        persons.stream()
-                .filter(person -> person.getId() == id)
-                .findFirst().ifPresent(
-                        person -> {
-                            person.setAge(updatedPerson.getAge());
-                            person.setName(updatedPerson.getName());
-                        }
-                );
+        jdbcTemplate.update(
+                "UPDATE person SET name=?, age=? WHERE id=?",
+                updatedPerson.getName(),
+                updatedPerson.getAge(),
+                id);
     }
 
     @Override
     public List<Book> getBooksByPersonId(int id) {
-        return List.of();
+        return jdbcTemplate.query(
+                "SELECT * FROM book WHERE personId=?",
+                new BeanPropertyRowMapper<>(Book.class),
+                id);
     }
 
 }

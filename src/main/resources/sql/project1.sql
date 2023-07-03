@@ -12,8 +12,8 @@ CREATE TABLE book (
     personId int REFERENCES person(id) ON DELETE SET NULL
 );
 
-INSERT INTO person VALUES (1, 'Ivan Ivanovich Ivanov', 23);
-INSERT INTO person VALUES (2, 'Petr Petrovich Petrov', 31);
+INSERT INTO person(name,age) VALUES ('Ivan Ivanovich Ivanov', 23);
+INSERT INTO person(name,age) VALUES ('Petr Petrovich Petrov', 31);
 
-INSERT INTO book VALUES (1, 'Game of thrones','George Marcin', 1997);
-INSERT INTO book VALUES (2, '1984','George Orwell', 1949);
+INSERT INTO book(title,author,year) VALUES ('Game of thrones','George Marcin', 1997);
+INSERT INTO book(title,author,year) VALUES ('1984','George Orwell', 1949);
