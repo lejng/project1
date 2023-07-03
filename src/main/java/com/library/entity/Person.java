@@ -1,11 +1,18 @@
 package com.library.entity;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
+
 public class Person {
 
     private int id;
 
+    @NotEmpty(message = "Name cannot be null")
+    @Size(min = 2, max = 100, message = "Name is too short")
     private String name;
 
+    @Min(value = 6, message = "Age must be more than 6 year")
     private int age;
 
     public Person() {

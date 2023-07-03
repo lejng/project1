@@ -4,6 +4,7 @@ import com.library.dao.BookDao;
 import com.library.dao.PersonDao;
 import com.library.entity.Book;
 import com.library.entity.Person;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -43,7 +44,7 @@ public class BookController {
     }
 
     @PostMapping()
-    public String create(@ModelAttribute("book") /*@Valid*/ Book Book, BindingResult bindingResult) {
+    public String create(@ModelAttribute("book") @Valid Book Book, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             return "book/new";
         }
@@ -58,7 +59,7 @@ public class BookController {
     }
 
     @PatchMapping("/{id}")
-    public String update(@ModelAttribute("book") /*@Valid*/ Book book, BindingResult bindingResult, @PathVariable("id") int id) {
+    public String update(@ModelAttribute("book") @Valid Book book, BindingResult bindingResult, @PathVariable("id") int id) {
         if (bindingResult.hasErrors()) {
             return "book/edit";
         }
