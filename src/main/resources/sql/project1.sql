@@ -12,6 +12,8 @@ CREATE TABLE book (
     personId int REFERENCES person(id) ON DELETE SET NULL
 );
 
+ALTER TABLE book ADD bookedAt timestamp;
+
 INSERT INTO person(name,age) VALUES ('Ivan Ivanovich Ivanov', 23);
 INSERT INTO person(name,age) VALUES ('Petr Petrovich Petrov', 31);
 
